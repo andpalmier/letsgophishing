@@ -15,8 +15,10 @@ https://malicious.com/aaa/bbb.zip
 
 ## Usage
 
+Build the executable with `go build phishfinder.go`. Then:
+
 ```
-$ go run phishfinder.go -h
+$ ./phishfinder -h
   -i string
     	specify as input a file containing URLs; if not provided the tool will get the latest URLs from Phishtank
   -o string
@@ -29,5 +31,12 @@ $ go run phishfinder.go -h
 
 ## Todo
 
+- Refactor code
+- Variable for verbose
+- Known phishing kits (16shop)
 - Use a static list for the extensions we want to look for
-- Remove dependency from [goquery](https://github.com/PuerkitoBio/goquery)
+- Use multiple wg
+- Include sha1 in the log
+- HTTP client
+- Color improvement
+- Variable for already seen URLs
