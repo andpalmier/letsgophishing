@@ -8,7 +8,7 @@
 
 TODO
 - reduce duplicates
-- get to_remove, kits, suspicious from json?
+- get toremove, kits, suspicious from json -> not hardcode
 
 */
 
@@ -38,7 +38,7 @@ var (
 	outputFile string
 
 	// strings to remove from beginning of URLs
-	to_remove = []string{"*", "cpcalendars", "cpcontacts", "mail", "webdisk", "webmail"}
+	toremove = []string{"*", "cpcalendars", "cpcontacts", "mail", "webdisk", "webmail"}
 
 	// common phishing kits titles
 	kits = []string{"16shop", "ipanel", "freakzBrothers", "izanami", "itech", "phoenix"}
@@ -65,10 +65,10 @@ func urlChecker(wg *sync.WaitGroup, urlsChan <-chan string, phishChan chan<- str
 	for url := range urlsChan {
 
 		parsed := strings.Split(url, ".")
-		lenght := len(parsed)
+		length := len(parsed)
 
 		// remove some strings for possible duplicates
-		for _, rem := range to_remove {
+		for _, rem := range toremove {
 			if len(parsed) > 1 && parsed[1] == rem {
 				parsed = parsed[1:]
 			}
@@ -76,7 +76,7 @@ func urlChecker(wg *sync.WaitGroup, urlsChan <-chan string, phishChan chan<- str
 
 		// iterate over the subdomains
 		// ex. icloud.fakeapple.au.co --> au.co, fakeapple.au.co...
-		for i := 0; i < lenght-1; i++ {
+		for i := 0; i < length-1; i++ {
 
 			// from list of subdomains create a URL
 			url := strings.Join(parsed[i:], ".")
@@ -90,13 +90,13 @@ func urlChecker(wg *sync.WaitGroup, urlsChan <-chan string, phishChan chan<- str
 				//fmt.Println(url)
 
 				// get title of the page in lowercase
-				title := strings.ToLower(get_title("http://" + url + "/admin/"))
+				title := strings.ToLower(gettitle("http://" + url + "/admin/"))
 
 				// check if title of the page in *url*/admin/ is a known phishing kit
-				for _, kit_name := range kits {
+				for _, kitname := range kits {
 
 					// FOUND!
-					if strings.Contains(title, kit_name) {
+					if strings.Contains(title, kitname) {
 						color.Green.Printf("[!] Suspected phishing kit: %s at %s\n", title, url)
 
 						// send to channel!
@@ -105,7 +105,7 @@ func urlChecker(wg *sync.WaitGroup, urlsChan <-chan string, phishChan chan<- str
 				}
 
 				// find title of the page in URL
-				title = strings.ToLower(get_title("http://" + url))
+				title = strings.ToLower(gettitle("http://" + url))
 
 				// check if title of the page is suspicious
 				for _, susp := range suspicious {
@@ -225,7 +225,7 @@ func main() {
 }
 
 // given a URL, get the title of the HTML
-func get_title(url string) string {
+func gettitle(url string) string {
 
 	// make request to check title
 	req, err := http.NewRequest("GET", url, nil)

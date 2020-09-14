@@ -4,7 +4,7 @@
   <img alt="goransom" src="https://github.com/andpalmier/letsgophishing/blob/master/gopherphishing.png?raw=true" />
   <p align="center">
     <a href="https://github.com/andpalmier/letsgophishing/blob/master/LICENSE"><img alt="Software License" src="https://img.shields.io/badge/license-GPL3-brightgreen.svg?style=flat-square"></a>
-    <a href="https://goreportcard.com/report/github.com/andpalmier/goransom"><img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/andpalmier/goransom?style=flat-square"></a>
+    <a href="https://goreportcard.com/report/github.com/andpalmier/letsgophishing"><img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/andpalmier/letsgophishing?style=flat-square"></a>
     <a href="https://twitter.com/intent/follow?screen_name=andpalmier"><img src="https://img.shields.io/twitter/follow/andpalmier?style=social&logo=twitter" alt="follow on Twitter"></a>
   </p>
 </p>
