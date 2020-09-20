@@ -9,7 +9,7 @@
   </p>
 </p>
 
-This tool was written to inspect a huge list of URLs and check if they are hosting phishing pages by looking at the `title` tag in the retrieved page and at `URL/admin/` (where usually are located the panels of known phishing kits, eg. 16shop). `letsgophishing` makes use of the goroutines and channels to parallelize the requests.
+This tool was written to inspect a list of URLs and check if they are hosting phishing pages by looking at the `title` tag in the retrieved page and at `URL/admin/` (where usually are located the panels of known phishing kits, eg. 16shop). `letsgophishing` makes use of the goroutines and channels to parallelize the requests.
 
 ## Usage
 
@@ -27,3 +27,9 @@ $ ./letsgophishing -i inputFile -o outputFile -c 100
     	number of goroutines to use (default 100)
 ```
 
+## Todo
+
+- Get suspicious titles from yaml or json file?
+- Move some functions in func.go
+- Docker version
+- Improve efficiency of the code?
