@@ -27,9 +27,12 @@ $ ./letsgophishing -i inputFile -o outputFile -c 100
     	number of goroutines to use (default 100)
 ```
 
-## Todo
+## Config.json
 
-- Get suspicious titles from yaml or json file?
-- Move some functions in func.go
-- Docker version
-- Improve efficiency of the code?
+An example of config file is provided in `config.json`. If you want to change the name of the config file, there is a specific variable in the source code.
+
+The config file allows to specify 3 arrays:
+
+- `SuspiciousTitles`: if the `title` attribute of the HTML page at the specified URL contains one of the string in this array, the URL will be considered as suspicious.
+- `KitsTitles`: if the `title` attribute of the HTML page at `<specified_URL>/admin/` contains one of the string in this array, the URL could host a phishing kit.
+- `ToRemove`: the strings in this list will be removed from the URLs. For instance if `cpanel.abc.com` is considered and `cpanel` is included in the `ToRemove` array, then `letsgophishing` will try to reach `abc.com`.

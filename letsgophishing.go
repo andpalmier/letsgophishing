@@ -8,7 +8,6 @@
 
 TODO
 - reduce duplicates
-- get toremove, kits, suspicious from json -> not hardcode
 
 */
 
@@ -18,8 +17,8 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
 	"github.com/gookit/color"
+	"letsgophishing/utils"
 	"net/http"
 	"os"
 	"strings"
@@ -28,6 +27,9 @@ import (
 )
 
 var (
+	// config file name
+	configFile = "config.json"
+
 	// decide this in another way?
 	concurrency int
 
@@ -37,14 +39,8 @@ var (
 	// path to file containing output
 	outputFile string
 
-	// strings to remove from beginning of URLs
-	toremove = []string{"*", "cpcalendars", "cpcontacts", "mail", "webdisk", "webmail"}
-
-	// common phishing kits titles
-	kits = []string{"16shop", "ipanel", "freakzBrothers", "izanami", "itech", "phoenix"}
-
-	// suspicious titles
-	suspicious = []string{"unicredit", "intesa", "amazon sign in", "paypal sign in", "banc", "accedi", "manage your apple id", "login - dropbox", "facebook - log in", "sign in - google", "gmail", "tax refund", "linkedin", "sign in to your account", "bank of america", "steam", "log on to online banking"}
+	// config data
+	conf utils.Config
 
 	// client to make requests
 	client = &http.Client{Timeout: 3 * time.Second}
@@ -68,7 +64,7 @@ func urlChecker(wg *sync.WaitGroup, urlsChan <-chan string, phishChan chan<- str
 		length := len(parsed)
 
 		// remove some strings for possible duplicates
-		for _, rem := range toremove {
+		for _, rem := range conf.ToRemove {
 			if len(parsed) > 1 && parsed[1] == rem {
 				parsed = parsed[1:]
 			}
@@ -90,10 +86,10 @@ func urlChecker(wg *sync.WaitGroup, urlsChan <-chan string, phishChan chan<- str
 				//fmt.Println(url)
 
 				// get title of the page in lowercase
-				title := strings.ToLower(gettitle("http://" + url + "/admin/"))
+				title := strings.ToLower(utils.GetTitle("http://"+url+"/admin/", client))
 
 				// check if title of the page in *url*/admin/ is a known phishing kit
-				for _, kitname := range kits {
+				for _, kitname := range conf.KitsTitles {
 
 					// FOUND!
 					if strings.Contains(title, kitname) {
@@ -105,10 +101,10 @@ func urlChecker(wg *sync.WaitGroup, urlsChan <-chan string, phishChan chan<- str
 				}
 
 				// find title of the page in URL
-				title = strings.ToLower(gettitle("http://" + url))
+				title = strings.ToLower(utils.GetTitle("http://"+url, client))
 
 				// check if title of the page is suspicious
-				for _, susp := range suspicious {
+				for _, susp := range conf.SuspiciousTitles {
 
 					// FOUND!
 					if strings.Contains(title, susp) {
@@ -143,10 +139,10 @@ func main() {
 	// specify goroutines number with c
 	flag.IntVar(&concurrency, "c", 100, "number of goroutines")
 
+	// parse flags
 	flag.Parse()
 
 	// open file
-
 	if inputFile == "" {
 		color.Red.Printf("Please provide an input file using: -i\n")
 		os.Exit(1)
@@ -157,7 +153,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	// concurrency is set, TODO find optimal number somehow
+	// parse json config
+	conf = utils.ParseConfig(configFile)
+
+	// concurrency is set
 	for i := 0; i < concurrency; i++ {
 		wg.Add(1)
 
@@ -213,8 +212,8 @@ func main() {
 			counter++
 
 			// write them in a file
-			_, err2 := f.WriteString(phishUrl + "\n")
-			if err2 != nil {
+			_, err := f.WriteString(phishUrl + "\n")
+			if err != nil {
 				color.Red.Printf("Error writing to output file: %s\n", err)
 				os.Exit(1)
 			}
@@ -224,8 +223,9 @@ func main() {
 	fmt.Printf("\nSuspicious urls found: %d\n", counter)
 }
 
+/*
 // given a URL, get the title of the HTML
-func gettitle(url string) string {
+func getTitle(url string) string {
 
 	// make request to check title
 	req, err := http.NewRequest("GET", url, nil)
@@ -256,3 +256,29 @@ func gettitle(url string) string {
 	title := doc.Find("title").Text()
 	return title
 }
+
+
+// parse config file
+func parseConfig() Config {
+
+	// open configuration file
+	file, err := os.Open(configFile)
+	if err != nil {
+		color.Red.Printf("Error finding config file: %s\n", err)
+		os.Exit(1)
+	}
+	defer file.Close()
+
+	// decode the json
+	decoder := json.NewDecoder(file)
+	conf := Config{}
+	err = decoder.Decode(&conf)
+	if err != nil {
+		color.Red.Printf("Error parsing config file: %s\n", err)
+		os.Exit(1)
+	}
+
+	// return the config struct
+	return conf
+}
+*/
