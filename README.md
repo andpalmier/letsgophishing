@@ -16,15 +16,10 @@ This tool was written to inspect a list of URLs and check if they are hosting ph
 Build the executable with `go build letsgophishing.go`. Then:
 
 ```
-$ ./letsgophishing -i inputFile -o outputFile -c 100
+cat urls | letsgophishing -o output -c 100
 
-
-  -i string
-    	specify as input a file containing one URL per line (required)
-  -o string
-    	specify output directory for the kits and the log files (default "phishingulrs.txt")
-  -c int
-    	number of goroutines to use (default 100)
+-o: path to output file containing only suspicious URLs
+-c: number of goroutines to create
 ```
 
 ## Config.json

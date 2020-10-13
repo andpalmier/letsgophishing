@@ -1,20 +1,15 @@
 /*
 
-./letsgophishing -i input -o output -c 100
+cat urls | letsgophishing -o output -c 100
 
--i: path to input file containing 1 URL per line
 -o: path to output file containing only suspicious URLs
 -c: number of goroutines to create
-
-TODO
-- reduce duplicates
 
 */
 
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"github.com/gookit/color"
@@ -33,9 +28,6 @@ var (
 	// decide this in another way?
 	concurrency int
 
-	// path to file containing list of URLs
-	inputFile string
-
 	// path to file containing output
 	outputFile string
 
@@ -49,7 +41,7 @@ var (
 	written = make(map[string]bool)
 )
 
-// gets url from urlsChan (coming from the file) and - if page is suspicious - push it into phishChan
+// gets url from urlsChan (coming from stdin) and - if page is suspicious - push it into phishChan
 func urlChecker(wg *sync.WaitGroup, urlsChan <-chan string, phishChan chan<- string) {
 	// waitgroup should not be complete
 	defer wg.Done()
@@ -57,7 +49,7 @@ func urlChecker(wg *sync.WaitGroup, urlsChan <-chan string, phishChan chan<- str
 	// set of already written
 	analyzed := make(map[string]bool)
 
-	// loop in the channel of URLs from file
+	// loop in the channel of URLs from stdin
 	for url := range urlsChan {
 
 		parsed := strings.Split(url, ".")
@@ -86,7 +78,12 @@ func urlChecker(wg *sync.WaitGroup, urlsChan <-chan string, phishChan chan<- str
 				//fmt.Println(url)
 
 				// get title of the page in lowercase
-				title := strings.ToLower(utils.GetTitle("http://"+url+"/admin/", client))
+				title, err := utils.GetTitle("http://"+url+"/admin/", client)
+				if err != nil {
+				    // title not found
+				    continue
+				}
+				title = strings.ToLower(title)
 
 				// check if title of the page in *url*/admin/ is a known phishing kit
 				for _, kitname := range conf.KitsTitles {
@@ -101,7 +98,12 @@ func urlChecker(wg *sync.WaitGroup, urlsChan <-chan string, phishChan chan<- str
 				}
 
 				// find title of the page in URL
-				title = strings.ToLower(utils.GetTitle("http://"+url, client))
+				title, err = utils.GetTitle("http://"+url, client)
+				if err != nil {
+				    // title not found
+				    continue
+				}
+				title = strings.ToLower(title)
 
 				// check if title of the page is suspicious
 				for _, susp := range conf.SuspiciousTitles {
@@ -121,7 +123,7 @@ func urlChecker(wg *sync.WaitGroup, urlsChan <-chan string, phishChan chan<- str
 
 func main() {
 
-	// channel for urls from file
+	// channel for urls from stdin
 	urlsChan := make(chan string)
 
 	// channel where suspicious urls are pushed
@@ -129,9 +131,6 @@ func main() {
 
 	// wait group used to sync goroutines
 	var wg sync.WaitGroup
-
-	// specify input file with i
-	flag.StringVar(&inputFile, "i", "", "file containing URLs")
 
 	// specify output file with o
 	flag.StringVar(&outputFile, "o", "phishingurls.txt", "output file containing suspicious URLs")
@@ -142,15 +141,12 @@ func main() {
 	// parse flags
 	flag.Parse()
 
-	// open file
-	if inputFile == "" {
-		color.Red.Printf("Please provide an input file using: -i\n")
-		os.Exit(1)
-	}
-	file, err := os.Open(inputFile)
+	// get input from stdin
+	input, err := utils.GetInput()
 	if err != nil {
-		color.Red.Printf("Error opening the input file: %s\n", err)
-		os.Exit(1)
+	    // raise error if no input is provided
+	    color.Red.Printf("Error getting user input: %s\n", err)
+	    os.Exit(1)
 	}
 
 	// parse json config
@@ -166,10 +162,9 @@ func main() {
 
 	// push urls in urlsChan
 	go func() {
-		// create scanner to read line by line
-		scanner := bufio.NewScanner(file)
-		for scanner.Scan() {
-			url := scanner.Text()
+
+		// get url from list
+		for _, url := range input {
 
 			// clean URL
 			if strings.HasPrefix(url, "https://") {
@@ -222,63 +217,3 @@ func main() {
 	}
 	fmt.Printf("\nSuspicious urls found: %d\n", counter)
 }
-
-/*
-// given a URL, get the title of the HTML
-func getTitle(url string) string {
-
-	// make request to check title
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		//fmt.Printf("Error making the request: %s\n", err)
-		return "Not found"
-	}
-
-	// use neutral and non blocking UA
-	//req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36")
-
-	// iPhone UA
-	req.Header.Set("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148")
-
-	// get response in HTML
-	resp, err := client.Do(req)
-	if err != nil {
-		//fmt.Printf("Error getting the response: %s\n", err)
-		return "Not found"
-	}
-
-	// get title of the page that was in the response
-	doc, err := goquery.NewDocumentFromResponse(resp)
-	if err != nil {
-		//fmt.Printf("Error getting the response: %s\n", err)
-		return "Not found"
-	}
-	title := doc.Find("title").Text()
-	return title
-}
-
-
-// parse config file
-func parseConfig() Config {
-
-	// open configuration file
-	file, err := os.Open(configFile)
-	if err != nil {
-		color.Red.Printf("Error finding config file: %s\n", err)
-		os.Exit(1)
-	}
-	defer file.Close()
-
-	// decode the json
-	decoder := json.NewDecoder(file)
-	conf := Config{}
-	err = decoder.Decode(&conf)
-	if err != nil {
-		color.Red.Printf("Error parsing config file: %s\n", err)
-		os.Exit(1)
-	}
-
-	// return the config struct
-	return conf
-}
-*/
