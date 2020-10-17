@@ -15,7 +15,6 @@ import (
 type Config struct {
 	SuspiciousTitles []string
 	KitsTitles       []string
-	ToRemove         []string
 }
 
 // get list of URLs in stdin
