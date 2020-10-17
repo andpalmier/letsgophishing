@@ -16,18 +16,18 @@ This tool was written to inspect a list of URLs and check if they are hosting ph
 Build the executable with `go build letsgophishing.go`. Then:
 
 ```
-cat urls | letsgophishing -o output -c 100
+cat urls | letsgophishing -o output -r 100 -c config.json
 
 -o: path to output file containing only suspicious URLs
--c: number of goroutines to create
+-r: number of goroutines to create
+-c: path to config file (json format)
 ```
 
 ## Config.json
 
 An example of config file is provided in `config.json`. If you want to change the name of the config file, there is a specific variable in the source code.
 
-The config file allows to specify 3 arrays:
+The config file allows to specify arrays:
 
 - `SuspiciousTitles`: if the `title` attribute of the HTML page at the specified URL contains one of the string in this array, the URL will be considered as suspicious.
 - `KitsTitles`: if the `title` attribute of the HTML page at `<specified_URL>/admin/` contains one of the string in this array, the URL could host a phishing kit.
-- `ToRemove`: the strings in this list will be removed from the URLs. For instance if `cpanel.abc.com` is considered and `cpanel` is included in the `ToRemove` array, then `letsgophishing` will try to reach `abc.com`.
