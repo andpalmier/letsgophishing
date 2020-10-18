@@ -1,10 +1,10 @@
 /*
 
-cat urls | letsgophishing -o output -r 100 -c config.json
+cat urls | lgphish -o output -r 100 -c config.json
 
 -o: path to output file containing only suspicious URLs
--c: number of goroutines to create
--s: config file
+-r: number of goroutines to create
+-c: config file
 
 */
 
@@ -128,10 +128,10 @@ func main() {
     // specify output file with o
     flag.StringVar(&outputFile, "o", "phishingurls.txt", "output file containing suspicious URLs")
 
-    // specify config file with s
+    // specify config file with c
     flag.StringVar(&configFile, "c", "config.json", "config file")
 
-    // specify goroutines number with c
+    // specify goroutines number with r
     flag.IntVar(&concurrency, "r", 100, "number of goroutines")
 
     // parse flags
