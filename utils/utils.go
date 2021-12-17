@@ -6,39 +6,39 @@ import (
 	"errors"
 	"net/http"
 	"os"
+
 	"github.com/PuerkitoBio/goquery"
 	termutil "github.com/andrew-d/go-termutil"
 	"github.com/gookit/color"
 )
 
-// config file struct
+// Config file struct
 type Config struct {
 	SuspiciousTitles []string
 	KitsTitles       []string
 }
 
-// get list of URLs in stdin
+// GetInput -> get list of URLs in stdin
 func GetInput() ([]string, error) {
-    var urls []string
+	var urls []string
 
-    // if nothing on stdin raise error
-    if termutil.Isatty(os.Stdin.Fd()) {
-	return urls, errors.New("No input provided")
+	// if nothing on stdin raise error
+	if termutil.Isatty(os.Stdin.Fd()) {
+		return urls, errors.New("No input provided")
 
-    // otherwise process input
-    } else {
-	sc := bufio.NewScanner(os.Stdin)
-	for sc.Scan() {
-	    urls = append(urls, sc.Text())
+		// otherwise process input
+	} else {
+		sc := bufio.NewScanner(os.Stdin)
+		for sc.Scan() {
+			urls = append(urls, sc.Text())
+		}
+
+		// return list of urls
+		return urls, nil
 	}
-
-	// return list of urls
-	return urls, nil
-    }
 }
 
-
-// given a URL, get the title of the HTML
+// GetTitle -> given a URL, get the title of the HTML
 func GetTitle(url string, client *http.Client) (string, error) {
 
 	// make request to check title
@@ -71,8 +71,8 @@ func GetTitle(url string, client *http.Client) (string, error) {
 	return title, nil
 }
 
-// parse config file
-func ParseConfig(configFile string) (Config) {
+// ParseConfig -> parse config file
+func ParseConfig(configFile string) Config {
 
 	// open configuration file
 	file, err := os.Open(configFile)

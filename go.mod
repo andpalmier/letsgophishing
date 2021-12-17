@@ -1,4 +1,4 @@
-module letsgophishing
+module github.com/andpalmier/letsgophishing
 
 go 1.15
 
